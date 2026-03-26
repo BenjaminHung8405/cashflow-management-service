@@ -2,7 +2,7 @@ import cors from 'cors';
 import express, { Express, Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-
+tại sao npm run dev thành công nhưng app.ts trả về Cannot import type declaration files. Consider importing 'index' instead of '@types/index'.
 import { errorHandler } from '@core/middlewares/error.middleware';
 import { ApiResponse, AuthRequest } from '@types/index';
 
