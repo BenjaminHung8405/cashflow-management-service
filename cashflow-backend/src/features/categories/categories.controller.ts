@@ -1,5 +1,5 @@
-import { AppError } from '@core/errors/AppError';
 import { ApiResponse, AuthRequest } from '@/types/index';
+import { AppError } from '@core/errors/AppError';
 import { NextFunction, Response } from 'express';
 import { CategoriesUseCase } from './categories.usecase';
 
@@ -17,7 +17,8 @@ export class CategoriesController {
       const categories = await this.useCase.getAllCategories(req.user.id);
       res.status(200).json({
         status: 'success',
-        data: categories,
+        message: 'Categories fetched successfully',
+        data: { categories },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -32,7 +33,7 @@ export class CategoriesController {
       res.status(201).json({
         status: 'success',
         message: 'Category created successfully',
-        data: result,
+        data: { category: result },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -46,7 +47,7 @@ export class CategoriesController {
       const category = await this.useCase.getCategoryById(req.user.id, req.params.id);
       res.status(200).json({
         status: 'success',
-        data: category,
+        data: { category },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -61,7 +62,7 @@ export class CategoriesController {
       res.status(200).json({
         status: 'success',
         message: 'Category updated successfully',
-        data: result,
+        data: { category: result },
       } as ApiResponse);
     } catch (error) {
       next(error);

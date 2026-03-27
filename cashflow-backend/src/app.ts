@@ -1,6 +1,7 @@
+import { ApiResponse, AuthRequest } from '@/types/index';
 import { errorHandler } from '@core/middlewares/error.middleware';
 import authRoutes from '@features/auth/auth.routes';
-import { ApiResponse, AuthRequest } from '@/types/index';
+import categoryRoutes from '@features/categories/categories.routes';
 import cors from 'cors';
 import express, { Express, Response } from 'express';
 import helmet from 'helmet';
@@ -32,12 +33,11 @@ app.get('/health', (req: AuthRequest, res: Response) => {
 
 // TODO: Mount feature routes
 // import walletRoutes from '@features/wallets/wallets.routes';
-// import categoryRoutes from '@features/categories/categories.routes';
 // import transactionRoutes from '@features/transactions/transactions.routes';
 //
 app.use('/api/v1/auth', authRoutes);
 // app.use('/api/v1/wallets', walletRoutes);
-// app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/categories', categoryRoutes);
 // app.use('/api/v1/transactions', transactionRoutes);
 
 // 404 handler
