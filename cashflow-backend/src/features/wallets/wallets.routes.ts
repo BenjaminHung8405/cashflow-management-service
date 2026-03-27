@@ -1,9 +1,12 @@
+import { requireAuth } from '@core/middlewares/auth.middleware';
 import { asyncHandler } from '@core/middlewares/error.middleware';
 import { Router } from 'express';
 import { WalletsController } from './wallets.controller';
 
 const router = Router();
 const controller = new WalletsController();
+
+router.use(requireAuth);
 
 /**
  * GET /api/v1/wallets

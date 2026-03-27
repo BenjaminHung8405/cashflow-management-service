@@ -1,6 +1,21 @@
 import { prisma } from '@core/config/database';
 import { Wallet, WalletType } from '@prisma/client';
 
+export type CreateWalletInput = {
+  userId: string;
+  name: string;
+  walletType: WalletType;
+  icon?: string | null;
+  creditLimit?: number | null;
+};
+
+export type UpdateWalletInput = {
+  name?: string;
+  walletType?: WalletType;
+  icon?: string | null;
+  creditLimit?: number | null;
+};
+
 /**
  * Layer: Repository (ONLY place for database queries)
  * Feature: Wallets
@@ -19,28 +34,32 @@ export class WalletsRepository {
     });
   }
 
-  async create(data: {
-    userId: string;
-    name: string;
-    walletType: WalletType;
-    icon?: string | null;
-    creditLimit?: number | null;
-  }): Promise<Wallet> {
+  async create(data: CreateWalletInput): Promise<Wallet> {
     return prisma.wallet.create({
       data: {
         userId: data.userId,
         name: data.name,
         walletType: data.walletType,
-        icon: data.icon,
-        creditLimit: data.creditLimit ? parseFloat(data.creditLimit.toString()) : 0,
+        icon: data.icon ?? null,
+        creditLimit: data.creditLimit ?? 0,
+        balance: 0,
       },
     });
   }
 
-  async update(id: string, data: Partial<Wallet>): Promise<Wallet> {
+  async update(id: string, data: UpdateWalletInput): Promise<Wallet> {
     return prisma.wallet.update({
       where: { id },
       data,
+    });
+  }
+
+  async countTransactionsByWalletId(walletId: string): Promise<number> {
+    return prisma.transaction.count({
+      where: {
+        walletId,
+        isDeleted: false,
+      },
     });
   }
 

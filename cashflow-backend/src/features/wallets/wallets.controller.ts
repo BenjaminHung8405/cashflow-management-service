@@ -1,5 +1,5 @@
-import { AppError } from '@core/errors/AppError';
 import { ApiResponse, AuthRequest } from '@/types/index';
+import { AppError } from '@core/errors/AppError';
 import { NextFunction, Response } from 'express';
 import { WalletsUseCase } from './wallets.usecase';
 
@@ -17,7 +17,8 @@ export class WalletsController {
       const wallets = await this.useCase.getAllWallets(req.user.id);
       res.status(200).json({
         status: 'success',
-        data: wallets,
+        message: 'Wallets fetched successfully',
+        data: { wallets },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -32,7 +33,7 @@ export class WalletsController {
       res.status(201).json({
         status: 'success',
         message: 'Wallet created successfully',
-        data: result,
+        data: { wallet: result },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -46,7 +47,7 @@ export class WalletsController {
       const wallet = await this.useCase.getWalletById(req.user.id, req.params.id);
       res.status(200).json({
         status: 'success',
-        data: wallet,
+        data: { wallet },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -61,7 +62,7 @@ export class WalletsController {
       res.status(200).json({
         status: 'success',
         message: 'Wallet updated successfully',
-        data: result,
+        data: { wallet: result },
       } as ApiResponse);
     } catch (error) {
       next(error);
