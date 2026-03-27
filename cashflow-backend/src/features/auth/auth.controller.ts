@@ -1,83 +1,27 @@
-import { AppError } from '@core/errors/AppError';
-import { ApiResponse, AuthRequest } from '@types/index';
-import { NextFunction, Response } from 'express';
-import { AuthUseCase } from './auth.usecase';
+import { NextFunction, Request, Response } from 'express';
+import { registerUser } from './auth.usecase';
 
-export class AuthController {
-  private useCase: AuthUseCase = new AuthUseCase();
+export const register = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Controller chỉ làm nhiệm vụ trích xuất dữ liệu từ body
+    const { username, email, password } = req.body;
 
-  /**
-   * Layer: Controller (HTTP req/res handling)
-   * Feature: Auth (registration)
-   */
-  async register(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { username, email, password } = req.body;
-
-      if (!username || !password) {
-        throw new AppError('Username and password are required', 400);
-      }
-
-      const result = await this.useCase.register({ username, email, password });
-
-      const response: ApiResponse = {
-        status: 'success',
-        message: 'User registered successfully',
-        data: result,
-      };
-
-      res.status(201).json(response);
-    } catch (error) {
-      next(error);
+    if (!username || !password) {
+      res.status(400).json({ status: 'error', message: 'Username and password are required' });
+      return;
     }
+
+    // Đẩy data xuống UseCase xử lý
+    const user = await registerUser({ username, email, password });
+
+    // Trả về kết quả
+    res.status(201).json({
+      status: 'success',
+      message: 'User registered successfully',
+      data: { user },
+    });
+  } catch (error: any) {
+    // Nếu UseCase quăng lỗi (ví dụ: Trùng username), đẩy sang Error Middleware xử lý
+    res.status(400).json({ status: 'error', message: error.message });
   }
-
-  /**
-   * Layer: Controller (HTTP req/res handling)
-   * Feature: Auth (login)
-   */
-  async login(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { username, password } = req.body;
-
-      if (!username || !password) {
-        throw new AppError('Username and password are required', 400);
-      }
-
-      const result = await this.useCase.login({ username, password });
-
-      const response: ApiResponse = {
-        status: 'success',
-        message: 'Login successful',
-        data: result,
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * Layer: Controller (HTTP req/res handling)
-   * Feature: Auth (get profile)
-   */
-  async getProfile(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new AppError('Unauthorized', 401);
-      }
-
-      const result = await this.useCase.getProfile(req.user.id);
-
-      const response: ApiResponse = {
-        status: 'success',
-        data: result,
-      };
-
-      res.status(200).json(response);
-    } catch (error) {
-      next(error);
-    }
-  }
-}
+};

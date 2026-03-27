@@ -1,10 +1,10 @@
+import { errorHandler } from '@core/middlewares/error.middleware';
+import authRoutes from '@features/auth/auth.routes';
+import { ApiResponse, AuthRequest } from '@types/index';
 import cors from 'cors';
 import express, { Express, Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-tại sao npm run dev thành công nhưng app.ts trả về Cannot import type declaration files. Consider importing 'index' instead of '@types/index'.
-import { errorHandler } from '@core/middlewares/error.middleware';
-import { ApiResponse, AuthRequest } from '@types/index';
 
 const app: Express = express();
 
@@ -31,12 +31,11 @@ app.get('/health', (req: AuthRequest, res: Response) => {
 });
 
 // TODO: Mount feature routes
-// import authRoutes from '@features/auth/auth.routes';
 // import walletRoutes from '@features/wallets/wallets.routes';
 // import categoryRoutes from '@features/categories/categories.routes';
 // import transactionRoutes from '@features/transactions/transactions.routes';
 //
-// app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 // app.use('/api/v1/wallets', walletRoutes);
 // app.use('/api/v1/categories', categoryRoutes);
 // app.use('/api/v1/transactions', transactionRoutes);
