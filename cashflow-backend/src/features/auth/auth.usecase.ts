@@ -61,3 +61,13 @@ export const loginUser = async (data: any) => {
     token,
   };
 };
+
+export const getUserById = async (userId: string) => {
+  const user = await authRepo.getUserById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const { passwordHash, ...userWithoutPassword } = user;
+  return userWithoutPassword;
+};

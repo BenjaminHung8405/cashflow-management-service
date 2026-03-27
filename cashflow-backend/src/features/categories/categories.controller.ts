@@ -1,5 +1,5 @@
 import { AppError } from '@core/errors/AppError';
-import { ApiResponse, AuthRequest } from '@types/index';
+import { ApiResponse, AuthRequest } from '@/types/index';
 import { NextFunction, Response } from 'express';
 import { CategoriesUseCase } from './categories.usecase';
 

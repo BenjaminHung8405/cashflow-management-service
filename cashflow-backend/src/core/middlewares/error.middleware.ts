@@ -1,4 +1,4 @@
-import { AuthRequest } from '@types/index';
+import { AuthRequest } from '@/types/index';
 import { NextFunction, Response } from 'express';
 
 export const errorHandler = (

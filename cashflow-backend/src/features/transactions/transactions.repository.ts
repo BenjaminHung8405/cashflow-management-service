@@ -1,5 +1,5 @@
 import { prisma } from '@core/config/database';
-import { Transaction } from '@prisma/client';
+import { Transaction, TransactionType } from '@prisma/client';
 
 interface FindOptions {
   skip?: number;
@@ -44,7 +44,7 @@ export class TransactionsRepository {
     walletId: string;
     categoryId: string;
     amount: number;
-    type: string;
+    type: TransactionType;
     note?: string;
     transactionDate: Date;
   }): Promise<Transaction> {

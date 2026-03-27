@@ -1,6 +1,6 @@
 import { errorHandler } from '@core/middlewares/error.middleware';
 import authRoutes from '@features/auth/auth.routes';
-import { ApiResponse, AuthRequest } from '@types/index';
+import { ApiResponse, AuthRequest } from '@/types/index';
 import cors from 'cors';
 import express, { Express, Response } from 'express';
 import helmet from 'helmet';

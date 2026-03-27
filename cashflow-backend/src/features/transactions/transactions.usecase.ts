@@ -1,7 +1,7 @@
 import { prisma } from '@core/config/database';
 import { AppError } from '@core/errors/AppError';
 import { Transaction, TransactionType } from '@prisma/client';
-import { PaginatedResponse, PaginationQuery } from '@types/index';
+import { PaginatedResponse, PaginationQuery } from '@/types/index';
 import { TransactionsRepository } from './transactions.repository';
 
 interface CreateTransactionInput {

@@ -1,5 +1,5 @@
 import { AppError } from '@core/errors/AppError';
-import { ApiResponse, AuthRequest, PaginationQuery } from '@types/index';
+import { ApiResponse, AuthRequest, PaginationQuery } from '@/types/index';
 import { NextFunction, Response } from 'express';
 import { TransactionsUseCase } from './transactions.usecase';
 

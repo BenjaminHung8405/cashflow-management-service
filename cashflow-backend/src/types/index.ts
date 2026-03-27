@@ -1,18 +1,20 @@
 import { NextFunction, Request, Response } from 'express';
 
-// Request/Response types
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    username: string;
-    email?: string;
-  };
+// Định nghĩa cấu trúc dữ liệu giải mã được từ JWT (phải khớp với lúc sign token)
+export interface JwtPayload {
+  id: string;
+  username: string;
 }
 
-export interface ApiResponse<T = unknown> {
+// Request/Response types
+export interface AuthRequest extends Request {
+  user?: JwtPayload;
+}
+
+export interface ApiResponse {
   status: 'success' | 'error';
-  message?: string;
-  data?: T;
+  message: string;
+  data?: any;
   error?: unknown;
 }
 

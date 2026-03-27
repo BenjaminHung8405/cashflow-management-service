@@ -1,5 +1,6 @@
-import { loginUser, registerUser } from '@features/auth/auth.usecase';
+import { getUserById, loginUser, registerUser } from '@features/auth/auth.usecase';
 import { NextFunction, Request, Response } from 'express';
+import type { AuthRequest } from '../../types/index';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -45,5 +46,21 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   } catch (error: any) {
     // Trả về 401 Unauthorized nếu sai thông tin
     res.status(401).json({ status: 'error', message: error.message });
+  }
+};
+
+export const getProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // Nhờ middleware 'requireAuth', ta chắc chắn req.user đã tồn tại ở bước này
+    const userId = req.user?.id;
+
+    const user = await getUserById(userId!);
+
+    res.status(200).json({
+      status: 'success',
+      data: { user },
+    });
+  } catch (error: any) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
 };

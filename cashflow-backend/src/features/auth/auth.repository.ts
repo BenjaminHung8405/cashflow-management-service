@@ -35,6 +35,10 @@ export const findUserById = async (id: string): Promise<User | null> => {
   });
 };
 
+export const getUserById = async (id: string): Promise<User | null> => {
+  return findUserById(id);
+};
+
 export const createUser = async (data: CreateUserInput): Promise<PublicUser> => {
   return prisma.user.create({
     data: {
