@@ -1,9 +1,12 @@
+import { requireAuth } from '@core/middlewares/auth.middleware';
 import { asyncHandler } from '@core/middlewares/error.middleware';
 import { Router } from 'express';
 import { TransactionsController } from './transactions.controller';
 
 const router = Router();
 const controller = new TransactionsController();
+
+router.use(requireAuth);
 
 router.get('/', asyncHandler((req, res, next) => controller.getAll(req, res, next)));
 router.post('/', asyncHandler((req, res, next) => controller.create(req, res, next)));
