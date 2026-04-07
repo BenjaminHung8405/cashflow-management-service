@@ -80,11 +80,11 @@ export class TransactionsController {
     try {
       if (!req.user) throw new AppError('Unauthorized', 401);
 
-      const result = await this.useCase.createTransaction(req.user.id, req.body);
+      const createdTransaction = await this.useCase.createTransaction(req.user.id, req.body);
       res.status(201).json({
         status: 'success',
         message: 'Transaction created successfully',
-        data: result,
+        data: { transaction: createdTransaction },
       } as ApiResponse);
     } catch (error) {
       next(error);
@@ -95,10 +95,12 @@ export class TransactionsController {
     try {
       if (!req.user) throw new AppError('Unauthorized', 401);
 
-      const transaction = await this.useCase.getTransactionById(req.user.id, req.params.id);
+      const transactionId = req.params.id;
+      const transaction = await this.useCase.getTransactionById(req.user.id, transactionId);
       res.status(200).json({
         status: 'success',
-        data: transaction,
+        message: 'Transaction detail fetched successfully',
+        data: { transaction },
       } as ApiResponse);
     } catch (error) {
       next(error);

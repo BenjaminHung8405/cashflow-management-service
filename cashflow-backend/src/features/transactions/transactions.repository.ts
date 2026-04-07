@@ -1,6 +1,31 @@
 import { prisma } from '@core/config/database';
 import { Prisma, Transaction, TransactionType } from '@prisma/client';
 
+export type CreateTransactionInput = {
+  userId: string;
+  walletId: string;
+  categoryId: string;
+  amount: number;
+  type: TransactionType;
+  note?: string;
+  transactionDate: Date;
+};
+
+export type UpdateTransactionInput = {
+  walletId: string;
+  categoryId: string;
+  amount: number;
+  type: TransactionType;
+  note?: string | null;
+  transactionDate: Date;
+};
+
+type BalanceMutationSnapshot = {
+  walletId: string;
+  amount: number;
+  type: TransactionType;
+};
+
 interface FindOptions {
   skip?: number;
   take?: number;
@@ -105,9 +130,17 @@ export class TransactionsRepository {
     });
   }
 
-  async findById(id: string): Promise<Transaction | null> {
+  async findById(id: string) {
     return prisma.transaction.findUnique({
       where: { id },
+      include: {
+        category: {
+          select: { id: true, name: true, icon: true, type: true },
+        },
+        wallet: {
+          select: { id: true, name: true, icon: true },
+        },
+      },
     });
   }
 
@@ -122,6 +155,113 @@ export class TransactionsRepository {
   }): Promise<Transaction> {
     return prisma.transaction.create({
       data,
+    });
+  }
+
+  async createWithWalletUpdate(data: CreateTransactionInput) {
+    return prisma.$transaction(async tx => {
+      const newTransaction = await tx.transaction.create({
+        data: {
+          userId: data.userId,
+          walletId: data.walletId,
+          categoryId: data.categoryId,
+          amount: data.amount,
+          type: data.type,
+          note: data.note,
+          transactionDate: data.transactionDate,
+        },
+        include: {
+          category: {
+            select: { id: true, name: true, icon: true, type: true },
+          },
+          wallet: {
+            select: { id: true, name: true },
+          },
+        },
+      });
+
+      const isIncome = data.type === TransactionType.INCOME;
+
+      await tx.wallet.update({
+        where: { id: data.walletId },
+        data: {
+          balance: isIncome
+            ? { increment: data.amount }
+            : { decrement: data.amount },
+        },
+      });
+
+      return newTransaction;
+    });
+  }
+
+  async updateWithBalanceUpdate(
+    id: string,
+    oldData: BalanceMutationSnapshot,
+    newData: UpdateTransactionInput
+  ) {
+    return prisma.$transaction(async tx => {
+      const revertMultiplier = oldData.type === TransactionType.INCOME ? -1 : 1;
+      await tx.wallet.update({
+        where: { id: oldData.walletId },
+        data: {
+          balance: {
+            increment: oldData.amount * revertMultiplier,
+          },
+        },
+      });
+
+      const updatedTransaction = await tx.transaction.update({
+        where: { id },
+        data: {
+          walletId: newData.walletId,
+          categoryId: newData.categoryId,
+          amount: newData.amount,
+          type: newData.type,
+          note: newData.note,
+          transactionDate: newData.transactionDate,
+        },
+        include: {
+          category: {
+            select: { id: true, name: true, icon: true, type: true },
+          },
+          wallet: {
+            select: { id: true, name: true, icon: true },
+          },
+        },
+      });
+
+      const applyMultiplier = newData.type === TransactionType.INCOME ? 1 : -1;
+      await tx.wallet.update({
+        where: { id: newData.walletId },
+        data: {
+          balance: {
+            increment: newData.amount * applyMultiplier,
+          },
+        },
+      });
+
+      return updatedTransaction;
+    });
+  }
+
+  async deleteWithBalanceUpdate(id: string, transactionData: BalanceMutationSnapshot) {
+    return prisma.$transaction(async tx => {
+      const revertMultiplier = transactionData.type === TransactionType.INCOME ? -1 : 1;
+
+      await tx.wallet.update({
+        where: { id: transactionData.walletId },
+        data: {
+          balance: {
+            increment: transactionData.amount * revertMultiplier,
+          },
+        },
+      });
+
+      return tx.transaction.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
     });
   }
 

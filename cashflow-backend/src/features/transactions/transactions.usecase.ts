@@ -2,16 +2,11 @@ import { PaginatedResponse, PaginationQuery } from '@/types/index';
 import { prisma } from '@core/config/database';
 import { AppError } from '@core/errors/AppError';
 import { Transaction, TransactionType } from '@prisma/client';
-import { TransactionsRepository } from './transactions.repository';
-
-interface CreateTransactionInput {
-  walletId: string;
-  categoryId: string;
-  amount: number;
-  type: TransactionType;
-  note?: string;
-  transactionDate: Date;
-}
+import {
+  CreateTransactionInput,
+  TransactionsRepository,
+  UpdateTransactionInput,
+} from './transactions.repository';
 
 /**
  * Layer: Use Case (pure business logic)
@@ -85,11 +80,17 @@ export class TransactionsUseCase {
     };
   }
 
-  async getTransactionById(userId: string, transactionId: string): Promise<Transaction> {
+  async getTransactionById(userId: string, transactionId: string) {
+    if (!userId) throw new AppError('Unauthorized', 401);
+
     const transaction = await this.repository.findById(transactionId);
 
-    if (!transaction || transaction.userId !== userId) {
+    if (!transaction || transaction.isDeleted) {
       throw new AppError('Transaction not found', 404);
+    }
+
+    if (transaction.userId !== userId) {
+      throw new AppError('Access denied. You do not own this transaction.', 403);
     }
 
     return transaction;
@@ -99,85 +100,163 @@ export class TransactionsUseCase {
    * Create transaction with ATOMIC operation to ensure consistency
    * Database Transaction: ensures both wallet balance and transaction are updated together
    */
-  async createTransaction(userId: string, data: CreateTransactionInput): Promise<Transaction> {
-    if (!data.walletId || !data.categoryId || !data.amount) {
-      throw new AppError('Wallet ID, Category ID, and Amount are required', 400);
+  async createTransaction(userId: string, payload: unknown) {
+    if (!userId) throw new AppError('Unauthorized', 401);
+
+    const { walletId, categoryId, amount, type, note, transactionDate } =
+      payload as Record<string, unknown>;
+
+    if (!walletId || !categoryId || !amount || !type || !transactionDate) {
+      throw new AppError('Missing required fields', 400);
     }
 
-    if (data.amount <= 0) {
+    const parsedAmount = Number(amount);
+    if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
       throw new AppError('Amount must be greater than 0', 400);
     }
 
-    // Use database transaction for atomic operation
-    const transaction = await prisma.$transaction(async tx => {
-      // Verify wallet exists and belongs to user
-      const wallet = await tx.wallet.findUnique({
-        where: { id: data.walletId },
-      });
+    if (type !== TransactionType.INCOME && type !== TransactionType.EXPENSE) {
+      throw new AppError('Invalid transaction type', 400);
+    }
 
-      if (!wallet || wallet.userId !== userId) {
-        throw new AppError('Wallet not found', 404);
-      }
+    const walletIdStr = String(walletId);
+    const categoryIdStr = String(categoryId);
 
-      // Calculate new balance
-      const amountDecimal = parseFloat(data.amount.toString());
-      const newBalance =
-        data.type === TransactionType.INCOME
-          ? wallet.balance.toNumber() + amountDecimal
-          : wallet.balance.toNumber() - amountDecimal;
-
-      // Check balance for expenses
-      if (data.type === TransactionType.EXPENSE && newBalance < 0) {
-        throw new AppError('Insufficient balance', 400);
-      }
-
-      // Create transaction
-      const createdTransaction = await tx.transaction.create({
-        data: {
-          userId,
-          walletId: data.walletId,
-          categoryId: data.categoryId,
-          amount: amountDecimal,
-          type: data.type,
-          note: data.note,
-          transactionDate: data.transactionDate,
-        },
-      });
-
-      // Update wallet balance
-      await tx.wallet.update({
-        where: { id: data.walletId },
-        data: {
-          balance: newBalance,
-        },
-      });
-
-      return createdTransaction;
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: walletIdStr },
     });
+    if (!wallet || wallet.userId !== userId) {
+      throw new AppError('Wallet not found or access denied', 404);
+    }
 
-    return transaction;
+    const category = await prisma.category.findUnique({
+      where: { id: categoryIdStr },
+    });
+    if (!category || category.isDeleted) {
+      throw new AppError('Category not found', 404);
+    }
+
+    if (category.userId !== null && category.userId !== userId) {
+      throw new AppError('Category access denied', 403);
+    }
+
+    if (category.type !== type) {
+      throw new AppError(`Category type mismatch. Expected ${category.type}`, 400);
+    }
+
+    const parsedDate = new Date(String(transactionDate));
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new AppError('Invalid transactionDate', 400);
+    }
+
+    const createPayload: CreateTransactionInput = {
+      userId,
+      walletId: walletIdStr,
+      categoryId: categoryIdStr,
+      amount: parsedAmount,
+      type,
+      note: note ? String(note) : undefined,
+      transactionDate: parsedDate,
+    };
+
+    return this.repository.createWithWalletUpdate(createPayload);
   }
 
   async updateTransaction(
     userId: string,
     transactionId: string,
-    data: Partial<Transaction>
-  ): Promise<Transaction> {
-    const transaction = await this.getTransactionById(userId, transactionId);
+    payload: unknown
+  ) {
+    if (!userId) throw new AppError('Unauthorized', 401);
 
-    return this.repository.update(transactionId, {
-      ...data,
-      id: transaction.id,
-      userId: transaction.userId,
-      createdAt: transaction.createdAt,
-      updatedAt: new Date(),
+    const oldTransaction = await this.getTransactionById(userId, transactionId);
+    const payloadData = payload as Record<string, unknown>;
+
+    const nextType = payloadData.type ?? oldTransaction.type;
+    if (nextType !== TransactionType.INCOME && nextType !== TransactionType.EXPENSE) {
+      throw new AppError('Invalid transaction type', 400);
+    }
+
+    const nextAmount =
+      payloadData.amount !== undefined
+        ? Number(payloadData.amount)
+        : Number(oldTransaction.amount);
+
+    if (Number.isNaN(nextAmount) || nextAmount <= 0) {
+      throw new AppError('Amount must be greater than 0', 400);
+    }
+
+    const nextWalletId = payloadData.walletId
+      ? String(payloadData.walletId)
+      : oldTransaction.walletId;
+    const nextCategoryId = payloadData.categoryId
+      ? String(payloadData.categoryId)
+      : oldTransaction.categoryId;
+
+    const wallet = await prisma.wallet.findUnique({
+      where: { id: nextWalletId },
     });
+    if (!wallet || wallet.userId !== userId) {
+      throw new AppError('Wallet not found or access denied', 404);
+    }
+
+    const category = await prisma.category.findUnique({
+      where: { id: nextCategoryId },
+    });
+    if (!category || category.isDeleted) {
+      throw new AppError('Category not found', 404);
+    }
+
+    if (category.userId !== null && category.userId !== userId) {
+      throw new AppError('Category access denied', 403);
+    }
+
+    if (category.type !== nextType) {
+      throw new AppError('Invalid category type', 400);
+    }
+
+    const nextTransactionDate = payloadData.transactionDate
+      ? new Date(String(payloadData.transactionDate))
+      : oldTransaction.transactionDate;
+
+    if (Number.isNaN(nextTransactionDate.getTime())) {
+      throw new AppError('Invalid transactionDate', 400);
+    }
+
+    const newData: UpdateTransactionInput = {
+      walletId: nextWalletId,
+      categoryId: nextCategoryId,
+      amount: nextAmount,
+      type: nextType,
+      note:
+        payloadData.note !== undefined
+          ? payloadData.note === null
+            ? null
+            : String(payloadData.note)
+          : oldTransaction.note,
+      transactionDate: nextTransactionDate,
+    };
+
+    return this.repository.updateWithBalanceUpdate(
+      transactionId,
+      {
+        walletId: oldTransaction.walletId,
+        amount: Number(oldTransaction.amount),
+        type: oldTransaction.type,
+      },
+      newData
+    );
   }
 
-  async deleteTransaction(userId: string, transactionId: string): Promise<void> {
+  async deleteTransaction(userId: string, transactionId: string) {
+    if (!userId) throw new AppError('Unauthorized', 401);
+
     const transaction = await this.getTransactionById(userId, transactionId);
-    
-    // Soft delete
-    await this.repository.softDelete(transactionId);
+
+    return this.repository.deleteWithBalanceUpdate(transactionId, {
+      walletId: transaction.walletId,
+      amount: Number(transaction.amount),
+      type: transaction.type,
+    });
   }
 }
