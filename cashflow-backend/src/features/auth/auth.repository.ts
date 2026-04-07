@@ -17,6 +17,14 @@ type PublicUser = Prisma.UserGetPayload<{
   };
 }>;
 
+type UpdatedUserAfterPasswordChange = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    username: true;
+    updatedAt: true;
+  };
+}>;
+
 export const findUserByUsername = async (username: string): Promise<User | null> => {
   return prisma.user.findUnique({
     where: { username },
@@ -37,6 +45,21 @@ export const findUserById = async (id: string): Promise<User | null> => {
 
 export const getUserById = async (id: string): Promise<User | null> => {
   return findUserById(id);
+};
+
+export const updatePassword = async (
+  id: string,
+  passwordHash: string
+): Promise<UpdatedUserAfterPasswordChange> => {
+  return prisma.user.update({
+    where: { id },
+    data: { passwordHash },
+    select: {
+      id: true,
+      username: true,
+      updatedAt: true,
+    },
+  });
 };
 
 export const createUser = async (data: CreateUserInput): Promise<PublicUser> => {
@@ -71,4 +94,12 @@ export class AuthRepository {
   async create(data: CreateUserInput): Promise<PublicUser> {
     return createUser(data);
   }
+
+  async updatePassword(
+    id: string,
+    passwordHash: string
+  ): Promise<UpdatedUserAfterPasswordChange> {
+    return updatePassword(id, passwordHash);
+  }
 }
+

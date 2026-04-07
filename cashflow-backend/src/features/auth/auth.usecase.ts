@@ -1,6 +1,12 @@
+import { AppError } from '@core/errors/AppError';
 import * as authRepo from '@features/auth/auth.repository';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
+type ChangePasswordInput = {
+  oldPassword: string;
+  newPassword: string;
+};
 
 export const registerUser = async (data: any) => {
   const { username, email, password } = data;
@@ -8,14 +14,14 @@ export const registerUser = async (data: any) => {
   // 1. Kiểm tra username đã tồn tại chưa
   const existingUser = await authRepo.findUserByUsername(username);
   if (existingUser) {
-    throw new Error('Username already exists'); // Sau này ta sẽ đổi thành AppError chuẩn
+    throw new AppError('Username already exists', 409);
   }
 
   // 2. Kiểm tra email (nếu có)
   if (email) {
     const existingEmail = await authRepo.findUserByEmail(email);
     if (existingEmail) {
-      throw new Error('Email already exists');
+      throw new AppError('Email already exists', 409);
     }
   }
 
@@ -35,13 +41,13 @@ export const loginUser = async (data: any) => {
   const user = await authRepo.findUserByUsername(username);
   if (!user) {
     // Bảo mật: Dù sai username hay sai pass đều trả chung 1 câu để chống hacker dò tìm username
-    throw new Error('Invalid username or password');
+    throw new AppError('Invalid username or password', 401);
   }
 
   // 2. So sánh mật khẩu người dùng nhập với Hash trong DB
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
   if (!isPasswordValid) {
-    throw new Error('Invalid username or password');
+    throw new AppError('Invalid username or password', 401);
   }
 
   // 3. Tạo JWT Token
@@ -65,9 +71,37 @@ export const loginUser = async (data: any) => {
 export const getUserById = async (userId: string) => {
   const user = await authRepo.getUserById(userId);
   if (!user) {
-    throw new Error('User not found');
+    throw new AppError('User not found', 404);
   }
 
   const { passwordHash, ...userWithoutPassword } = user;
   return userWithoutPassword;
+};
+
+export const changePassword = async (userId: string, data: ChangePasswordInput) => {
+  const { oldPassword, newPassword } = data;
+
+  if (!oldPassword || !newPassword) {
+    throw new AppError('Old password and new password are required', 400);
+  }
+
+  const user = await authRepo.findUserById(userId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  const isOldPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
+  if (!isOldPasswordValid) {
+    throw new AppError('Incorrect old password', 400);
+  }
+
+  const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+  if (isSamePassword) {
+    throw new AppError('New password must be different from the old password', 400);
+  }
+
+  const saltRounds = 10;
+  const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+
+  return authRepo.updatePassword(userId, newPasswordHash);
 };

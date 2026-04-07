@@ -1,20 +1,18 @@
 import { NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import type { AuthRequest, JwtPayload } from '../../types/index';
+import { AppError } from '../errors/AppError';
 
 export const requireAuth = (
   req: AuthRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
   // 1. Lấy token từ header 'Authorization' (Định dạng chuẩn: "Bearer <token>")
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({
-      status: 'error',
-      message: 'Unauthorized: No token provided',
-    });
+    next(new AppError('Unauthorized: No token provided', 401));
     return;
   }
 
@@ -38,6 +36,6 @@ export const requireAuth = (
         ? 'Unauthorized: Token has expired'
         : 'Unauthorized: Invalid token';
 
-    res.status(401).json({ status: 'error', message });
+    next(new AppError(message, 401));
   }
 };

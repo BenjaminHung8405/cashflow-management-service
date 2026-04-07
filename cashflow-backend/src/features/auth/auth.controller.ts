@@ -1,4 +1,10 @@
-import { getUserById, loginUser, registerUser } from '@features/auth/auth.usecase';
+import { AppError } from '@core/errors/AppError';
+import {
+    changePassword as changePasswordUseCase,
+    getUserById,
+    loginUser,
+    registerUser,
+} from '@features/auth/auth.usecase';
 import { NextFunction, Request, Response } from 'express';
 import type { AuthRequest } from '../../types/index';
 
@@ -8,8 +14,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const { username, email, password } = req.body;
 
     if (!username || !password) {
-      res.status(400).json({ status: 'error', message: 'Username and password are required' });
-      return;
+      throw new AppError('Username and password are required', 400);
     }
 
     // Đẩy data xuống UseCase xử lý
@@ -21,9 +26,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       message: 'User registered successfully',
       data: { user },
     });
-  } catch (error: any) {
+  } catch (error) {
     // Nếu UseCase quăng lỗi (ví dụ: Trùng username), đẩy sang Error Middleware xử lý
-    res.status(400).json({ status: 'error', message: error.message });
+    next(error);
   }
 };
 
@@ -32,8 +37,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const { username, password } = req.body;
 
     if (!username || !password) {
-      res.status(400).json({ status: 'error', message: 'Username and password are required' });
-      return;
+      throw new AppError('Username and password are required', 400);
     }
 
     const result = await loginUser({ username, password });
@@ -43,24 +47,48 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       message: 'Login successful',
       data: result,
     });
-  } catch (error: any) {
-    // Trả về 401 Unauthorized nếu sai thông tin
-    res.status(401).json({ status: 'error', message: error.message });
+  } catch (error) {
+    // Trả về lỗi theo chuẩn AppError từ UseCase / Middleware
+    next(error);
   }
 };
 
 export const getProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    // Nhờ middleware 'requireAuth', ta chắc chắn req.user đã tồn tại ở bước này
-    const userId = req.user?.id;
+    if (!req.user) {
+      throw new AppError('Unauthorized', 401);
+    }
 
-    const user = await getUserById(userId!);
+    // Nhờ middleware 'requireAuth', ta chắc chắn req.user đã tồn tại ở bước này
+    const userId = req.user.id;
+
+    const user = await getUserById(userId);
 
     res.status(200).json({
       status: 'success',
       data: { user },
     });
-  } catch (error: any) {
-    res.status(400).json({ status: 'error', message: error.message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    await changePasswordUseCase(userId, { oldPassword, newPassword });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password updated successfully',
+    });
+  } catch (error) {
+    next(error);
   }
 };
