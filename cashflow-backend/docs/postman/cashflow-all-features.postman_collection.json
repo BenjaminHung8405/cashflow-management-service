@@ -7,6 +7,41 @@
   },
   "item": [
     {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseHost}}/health",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
@@ -159,6 +194,118 @@
                 "auth",
                 "profile"
               ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 409', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 409]);",
+                  "});",
+                  "",
+                  "pm.test('Response has status field', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailUpdated}}\",\n  \"telegramChatId\": \"{{telegramChatId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 400', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});",
+                  "",
+                  "pm.test('Response has status field', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
           "response": []
@@ -360,6 +507,43 @@
                 }
               }
             },
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/categories/{{categoryId}}",
               "host": [
@@ -577,6 +761,43 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Delete Wallet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wallets",
+                "{{walletId}}"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -614,8 +835,9 @@
                   "",
                   "pm.test('Save transactionId', function () {",
                   "  const responseBodyJson = pm.response.json();",
-                  "  pm.expect(responseBodyJson.data).to.have.property('id');",
-                  "  pm.collectionVariables.set('transactionId', responseBodyJson.data.id);",
+                  "  pm.expect(responseBodyJson.data).to.have.property('transaction');",
+                  "  pm.expect(responseBodyJson.data.transaction).to.have.property('id');",
+                  "  pm.collectionVariables.set('transactionId', responseBodyJson.data.transaction.id);",
                   "});"
                 ]
               }
@@ -704,6 +926,43 @@
           "response": []
         },
         {
+          "name": "Get Recent Transactions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/recent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transactions",
+                "recent"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Transaction By Id",
           "event": [
             {
@@ -736,6 +995,57 @@
                 "transactions",
                 "{{transactionId}}"
               ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Transaction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/{{transactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transactions",
+                "{{transactionId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 130000,\n  \"note\": \"Updated from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
           "response": []
@@ -934,6 +1244,321 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Chart - Expense",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Chart response has chartData', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson.data).to.have.property('chartData');",
+                  "  pm.expect(responseBodyJson.data.chartData).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/chart?type=EXPENSE&month={{month}}&year={{year}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "chart"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "EXPENSE"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "Set Budget",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const requiredVars = ['token', 'categoryId', 'month', 'year'];",
+                  "const missingVars = requiredVars.filter((key) => !pm.collectionVariables.get(key));",
+                  "if (missingVars.length > 0) {",
+                  "  throw new Error(`Missing required collection variables for Set Budget: ${missingVars.join(', ')}.`);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Save budgetId if available', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  const budget = responseBodyJson?.data?.budget;",
+                  "  if (budget && budget.id) {",
+                  "    pm.collectionVariables.set('budgetId', budget.id);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/budgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "budgets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"amount\": {{budgetAmount}},\n  \"month\": {{month}},\n  \"year\": {{year}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Budget Progress",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains budgets array', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson.data).to.have.property('budgets');",
+                  "  pm.expect(responseBodyJson.data.budgets).to.be.an('array');",
+                  "  if (!pm.collectionVariables.get('budgetId') && responseBodyJson.data.budgets.length > 0) {",
+                  "    pm.collectionVariables.set('budgetId', responseBodyJson.data.budgets[0].id);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/budgets/progress?month={{month}}&year={{year}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "budgets",
+                "progress"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Budget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 404', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/budgets/{{budgetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "budgets",
+                "{{budgetId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Assistant",
+      "item": [
+        {
+          "name": "Get Weekly Roast",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains roast message', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson.data).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/roast",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "roast"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Test Telegram",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 400/502', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 502]);",
+                  "});",
+                  "",
+                  "pm.test('Response has status field', function () {",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/test-telegram",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "test-telegram"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
@@ -1017,6 +1642,36 @@
     {
       "key": "year",
       "value": "2026",
+      "type": "string"
+    },
+    {
+      "key": "baseHost",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "emailUpdated",
+      "value": "cashflow_demo_user_updated@example.com",
+      "type": "string"
+    },
+    {
+      "key": "newPassword",
+      "value": "password1234",
+      "type": "string"
+    },
+    {
+      "key": "telegramChatId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "budgetAmount",
+      "value": "1500000",
+      "type": "string"
+    },
+    {
+      "key": "budgetId",
+      "value": "",
       "type": "string"
     }
   ]

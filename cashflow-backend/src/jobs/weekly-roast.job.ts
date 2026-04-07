@@ -26,16 +26,22 @@ export const startCronJobs = (): void => {
           try {
             const roastResult = await assistantUseCase.getWeeklyRoast(user.id);
 
-            const message = [
-              '<b>Quan gia coc can da xuat hien!</b>',
+            const finalMessage = [
+              'Quan gia coc can da xuat hien!',
               '',
               roastResult.message,
               '',
-              '<i>Hen gap lai tuan sau. Lo ma lam an di!</i>',
+              'Hen gap lai tuan sau. Lo ma lam an di!',
             ].join('\n');
 
             if (user.telegramChatId) {
-              await TelegramService.sendMessage(user.telegramChatId, message);
+              const sendResult = await TelegramService.sendMessage(user.telegramChatId, finalMessage);
+              if (!sendResult.ok) {
+                console.error(
+                  `[weekly-roast-job] Telegram send failed for ${user.username}:`,
+                  sendResult.description || 'Unknown Telegram error'
+                );
+              }
             }
 
             // Avoid sending too fast to external APIs.

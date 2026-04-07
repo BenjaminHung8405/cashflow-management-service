@@ -68,3 +68,34 @@ export const pick = <T extends object, K extends keyof T>(
   });
   return result;
 };
+
+/**
+ * Normalize AI/HTML-like content into plain readable text.
+ */
+export const formatAssistantOutputText = (input: string): string => {
+  let text = input.trim();
+
+  // Some LLM outputs are wrapped in a single pair of quotes.
+  if (
+    (text.startsWith('"') && text.endsWith('"')) ||
+    (text.startsWith("'") && text.endsWith("'"))
+  ) {
+    text = text.slice(1, -1).trim();
+  }
+
+  return text
+    .replace(/\r\n/g, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?(b|i|u|strong|em)>/gi, '')
+    .replace(/<\/?[^>]+>/g, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};

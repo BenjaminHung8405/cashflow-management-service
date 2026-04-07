@@ -1,5 +1,6 @@
 import { AppError } from '@core/errors/AppError';
 import { TelegramService } from '@core/services/telegram.service';
+import { formatAssistantOutputText } from '@core/utils/index';
 import { getUserById } from '@features/auth/auth.usecase';
 import { DashboardUseCase } from '@features/dashboard/dashboard.usecase';
 import { AiService } from './ai.service';
@@ -33,7 +34,8 @@ export class AssistantUseCase {
       })),
     };
 
-    const roastMessage = await this.aiService.generateRoast(JSON.stringify(simplifiedData));
+    const rawRoastMessage = await this.aiService.generateRoast(JSON.stringify(simplifiedData));
+    const roastMessage = formatAssistantOutputText(rawRoastMessage);
 
     return {
       message: roastMessage,
@@ -51,16 +53,23 @@ export class AssistantUseCase {
 
     const roastResult = await this.getWeeklyRoast(userId);
     const message = [
-      '<b>Quan gia coc can da xuat hien!</b>',
+      'Quan gia coc can da xuat hien!',
       '',
       roastResult.message,
       '',
-      '<i>Day la tin nhan test thu cong.</i>',
+      'Day la tin nhan test thu cong.',
     ].join('\n');
 
-    const sent = await TelegramService.sendMessage(user.telegramChatId, message);
-    if (!sent) {
-      throw new AppError('Failed to send Telegram message', 502);
+    const sendResult = await TelegramService.sendMessage(user.telegramChatId, message);
+    if (!sendResult.ok) {
+      throw new AppError(
+        `Failed to send Telegram message: ${sendResult.description || 'Unknown Telegram error'}`,
+        502,
+        {
+          telegramErrorCode: sendResult.errorCode || null,
+          telegramDescription: sendResult.description || null,
+        }
+      );
     }
 
     return {
