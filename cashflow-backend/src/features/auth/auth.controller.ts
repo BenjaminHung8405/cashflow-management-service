@@ -4,6 +4,7 @@ import {
     getUserById,
     loginUser,
     registerUser,
+    updateProfile as updateProfileUseCase,
 } from '@features/auth/auth.usecase';
 import { NextFunction, Request, Response } from 'express';
 import type { AuthRequest } from '../../types/index';
@@ -87,6 +88,27 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
     res.status(200).json({
       status: 'success',
       message: 'Password updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    const userId = req.user.id;
+    const { email } = req.body;
+
+    const updatedUser = await updateProfileUseCase(userId, { email });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      data: { user: updatedUser },
     });
   } catch (error) {
     next(error);

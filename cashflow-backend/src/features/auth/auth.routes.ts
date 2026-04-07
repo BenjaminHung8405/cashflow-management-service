@@ -1,5 +1,11 @@
 import { requireAuth } from '@core/middlewares/auth.middleware';
-import { changePassword, getProfile, login, register } from '@features/auth/auth.controller';
+import {
+    changePassword,
+    getProfile,
+    login,
+    register,
+    updateProfile,
+} from '@features/auth/auth.controller';
 import { Router } from 'express';
 
 const router = Router();
@@ -8,6 +14,7 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 router.get('/profile', requireAuth, getProfile);
+router.patch('/profile', requireAuth, updateProfile);
 router.patch('/change-password', requireAuth, changePassword);
 
 export default router;

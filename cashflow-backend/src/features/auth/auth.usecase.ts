@@ -8,6 +8,10 @@ type ChangePasswordInput = {
   newPassword: string;
 };
 
+type UpdateProfileInput = {
+  email?: string;
+};
+
 export const registerUser = async (data: any) => {
   const { username, email, password } = data;
 
@@ -104,4 +108,24 @@ export const changePassword = async (userId: string, data: ChangePasswordInput) 
   const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
 
   return authRepo.updatePassword(userId, newPasswordHash);
+};
+
+export const updateProfile = async (userId: string, data: UpdateProfileInput) => {
+  const { email } = data;
+
+  if (email === undefined) {
+    throw new AppError('Email is required', 400);
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail.includes('@')) {
+    throw new AppError('Invalid email format', 400);
+  }
+
+  const existingUser = await authRepo.findUserByEmail(normalizedEmail);
+  if (existingUser && existingUser.id !== userId) {
+    throw new AppError('This email is already in use by another account', 409);
+  }
+
+  return authRepo.updateProfile(userId, { email: normalizedEmail });
 };
