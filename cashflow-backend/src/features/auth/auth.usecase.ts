@@ -10,6 +10,7 @@ type ChangePasswordInput = {
 
 type UpdateProfileInput = {
   email?: string;
+  telegramChatId?: string | null;
 };
 
 export const registerUser = async (data: any) => {
@@ -111,21 +112,41 @@ export const changePassword = async (userId: string, data: ChangePasswordInput) 
 };
 
 export const updateProfile = async (userId: string, data: UpdateProfileInput) => {
-  const { email } = data;
+  const { email, telegramChatId } = data;
 
-  if (email === undefined) {
-    throw new AppError('Email is required', 400);
+  if (email === undefined && telegramChatId === undefined) {
+    throw new AppError('At least one field is required to update profile', 400);
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail.includes('@')) {
-    throw new AppError('Invalid email format', 400);
+  let normalizedEmail: string | undefined;
+  if (email !== undefined) {
+    normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail.includes('@')) {
+      throw new AppError('Invalid email format', 400);
+    }
+
+    const existingUser = await authRepo.findUserByEmail(normalizedEmail);
+    if (existingUser && existingUser.id !== userId) {
+      throw new AppError('This email is already in use by another account', 409);
+    }
   }
 
-  const existingUser = await authRepo.findUserByEmail(normalizedEmail);
-  if (existingUser && existingUser.id !== userId) {
-    throw new AppError('This email is already in use by another account', 409);
+  let normalizedTelegramChatId: string | null | undefined;
+  if (telegramChatId !== undefined) {
+    if (telegramChatId === null) {
+      normalizedTelegramChatId = null;
+    } else {
+      const trimmed = telegramChatId.trim();
+      if (trimmed.length === 0) {
+        normalizedTelegramChatId = null;
+      } else {
+        normalizedTelegramChatId = trimmed;
+      }
+    }
   }
 
-  return authRepo.updateProfile(userId, { email: normalizedEmail });
+  return authRepo.updateProfile(userId, {
+    ...(normalizedEmail !== undefined && { email: normalizedEmail }),
+    ...(normalizedTelegramChatId !== undefined && { telegramChatId: normalizedTelegramChatId }),
+  });
 };

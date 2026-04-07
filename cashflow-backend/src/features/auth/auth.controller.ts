@@ -101,9 +101,9 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
     }
 
     const userId = req.user.id;
-    const { email } = req.body;
+    const { email, telegramChatId } = req.body;
 
-    const updatedUser = await updateProfileUseCase(userId, { email });
+    const updatedUser = await updateProfileUseCase(userId, { email, telegramChatId });
 
     res.status(200).json({
       status: 'success',

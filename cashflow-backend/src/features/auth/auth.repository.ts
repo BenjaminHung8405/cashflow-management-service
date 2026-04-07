@@ -13,6 +13,7 @@ type PublicUser = Prisma.UserGetPayload<{
     id: true;
     username: true;
     email: true;
+    telegramChatId: true;
     createdAt: true;
   };
 }>;
@@ -30,6 +31,7 @@ type UpdatedProfileUser = Prisma.UserGetPayload<{
     id: true;
     username: true;
     email: true;
+    telegramChatId: true;
     createdAt: true;
     updatedAt: true;
   };
@@ -74,17 +76,19 @@ export const updatePassword = async (
 
 export const updateProfile = async (
   id: string,
-  data: { email?: string }
+  data: { email?: string; telegramChatId?: string | null }
 ): Promise<UpdatedProfileUser> => {
   return prisma.user.update({
     where: { id },
     data: {
       ...(data.email !== undefined && { email: data.email }),
+      ...(data.telegramChatId !== undefined && { telegramChatId: data.telegramChatId }),
     },
     select: {
       id: true,
       username: true,
       email: true,
+      telegramChatId: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -102,6 +106,7 @@ export const createUser = async (data: CreateUserInput): Promise<PublicUser> => 
       id: true,
       username: true,
       email: true,
+      telegramChatId: true,
       createdAt: true,
     },
   });
@@ -131,7 +136,7 @@ export class AuthRepository {
     return updatePassword(id, passwordHash);
   }
 
-  async updateProfile(id: string, data: { email?: string }): Promise<UpdatedProfileUser> {
+  async updateProfile(id: string, data: { email?: string; telegramChatId?: string | null }): Promise<UpdatedProfileUser> {
     return updateProfile(id, data);
   }
 }
