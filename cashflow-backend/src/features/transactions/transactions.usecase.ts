@@ -1,7 +1,7 @@
+import { PaginatedResponse, PaginationQuery } from '@/types/index';
 import { prisma } from '@core/config/database';
 import { AppError } from '@core/errors/AppError';
 import { Transaction, TransactionType } from '@prisma/client';
-import { PaginatedResponse, PaginationQuery } from '@/types/index';
 import { TransactionsRepository } from './transactions.repository';
 
 interface CreateTransactionInput {
@@ -20,6 +20,13 @@ interface CreateTransactionInput {
  */
 export class TransactionsUseCase {
   private repository = new TransactionsRepository();
+
+  async getRecentTransactions(userId: string) {
+    if (!userId) throw new AppError('Unauthorized', 401);
+
+    const limit = 5;
+    return this.repository.findRecent(userId, limit);
+  }
 
   async getAllTransactions(
     userId: string,

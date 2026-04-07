@@ -1,5 +1,5 @@
-import { AppError } from '@core/errors/AppError';
 import { ApiResponse, AuthRequest, PaginationQuery } from '@/types/index';
+import { AppError } from '@core/errors/AppError';
 import { NextFunction, Response } from 'express';
 import { TransactionsUseCase } from './transactions.usecase';
 
@@ -9,6 +9,22 @@ import { TransactionsUseCase } from './transactions.usecase';
  */
 export class TransactionsController {
   private useCase = new TransactionsUseCase();
+
+  async getRecent(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Unauthorized', 401);
+
+      const transactions = await this.useCase.getRecentTransactions(req.user.id);
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Recent transactions fetched successfully',
+        data: { transactions },
+      } as ApiResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
 
   async getAll(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {

@@ -1,5 +1,5 @@
 import { prisma } from '@core/config/database';
-import { Transaction, TransactionType } from '@prisma/client';
+import { Prisma, Transaction, TransactionType } from '@prisma/client';
 
 interface FindOptions {
   skip?: number;
@@ -12,6 +12,36 @@ interface FindOptions {
  * Handles all database operations with indexes for performance
  */
 export class TransactionsRepository {
+  async findRecent(
+    userId: string,
+    limit: number
+  ): Promise<Prisma.TransactionGetPayload<{
+    include: {
+      category: { select: { id: true; name: true; icon: true; type: true } };
+      wallet: { select: { id: true; name: true; icon: true } };
+    };
+  }>[]> {
+    return prisma.transaction.findMany({
+      where: {
+        userId,
+        isDeleted: false,
+      },
+      orderBy: [
+        { transactionDate: 'desc' },
+        { createdAt: 'desc' },
+      ],
+      take: limit,
+      include: {
+        category: {
+          select: { id: true, name: true, icon: true, type: true },
+        },
+        wallet: {
+          select: { id: true, name: true, icon: true },
+        },
+      },
+    });
+  }
+
   async findByUserId(userId: string, options: FindOptions): Promise<Transaction[]> {
     return prisma.transaction.findMany({
       where: {
