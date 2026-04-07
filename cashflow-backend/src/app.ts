@@ -1,6 +1,7 @@
 import { ApiResponse, AuthRequest } from '@/types/index';
 import { errorHandler } from '@core/middlewares/error.middleware';
 import authRoutes from '@features/auth/auth.routes';
+import budgetRoutes from '@features/budgets/budgets.routes';
 import categoryRoutes from '@features/categories/categories.routes';
 import dashboardRoutes from '@features/dashboard/dashboard.routes';
 import transactionRoutes from '@features/transactions/transactions.routes';
@@ -39,6 +40,7 @@ app.use('/api/v1/wallets', walletRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/transactions', transactionRoutes);
+app.use('/api/v1/budgets', budgetRoutes);
 
 // 404 handler
 app.use((req: AuthRequest, res: Response) => {
