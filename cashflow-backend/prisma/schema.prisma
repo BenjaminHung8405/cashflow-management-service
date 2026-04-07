@@ -39,6 +39,7 @@ model User {
   transactions          Transaction[]
   budgets               Budget[]
   recurringTransactions RecurringTransaction[]
+  reports               Report[]
 
   @@map("users")
 }
@@ -139,4 +140,19 @@ model RecurringTransaction {
   category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   @@map("recurring_transactions")
+}
+
+model Report {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String   @db.VarChar(255) // VD: "Báo cáo mỏ hỗn tuần 1"
+  content   String   @db.Text // Chứa đoạn text Gemini trả về (có thể dài nên dùng Text)
+  isRead    Boolean  @default(false) @map("is_read") // Đánh dấu đã đọc hay chưa
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Thiết lập quan hệ (Relation) với bảng User
+  // Nếu User bị xóa, các báo cáo của User đó cũng bị xóa theo (Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reports") // Tên bảng dưới Database sẽ là số nhiều, chữ thường
 }
