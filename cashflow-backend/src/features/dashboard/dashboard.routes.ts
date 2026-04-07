@@ -9,5 +9,6 @@ const controller = new DashboardController();
 router.use(requireAuth);
 
 router.get('/statistics', asyncHandler((req, res, next) => controller.getStatistics(req, res, next)));
+router.get('/chart', asyncHandler((req, res, next) => controller.getChart(req, res, next)));
 
 export default router;
