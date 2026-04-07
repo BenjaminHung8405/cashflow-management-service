@@ -28,6 +28,41 @@ export class TransactionsUseCase {
     return this.repository.findRecent(userId, limit);
   }
 
+  async getTransactionsList(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+    month?: number,
+    year?: number
+  ) {
+    if (!userId) throw new AppError('Unauthorized', 401);
+
+    const safePage = page > 0 ? page : 1;
+    const safeLimit = limit > 0 ? limit : 20;
+    const skip = (safePage - 1) * safeLimit;
+
+    const { transactions, total } = await this.repository.findAllWithPagination(
+      userId,
+      skip,
+      safeLimit,
+      { month, year }
+    );
+
+    const totalPages = Math.ceil(total / safeLimit);
+
+    return {
+      transactions,
+      pagination: {
+        totalItems: total,
+        totalPages,
+        currentPage: safePage,
+        itemsPerPage: safeLimit,
+        hasNextPage: safePage < totalPages,
+        hasPrevPage: safePage > 1,
+      },
+    };
+  }
+
   async getAllTransactions(
     userId: string,
     pagination: PaginationQuery

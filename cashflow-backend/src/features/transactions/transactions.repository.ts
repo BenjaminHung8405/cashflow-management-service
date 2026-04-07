@@ -42,6 +42,48 @@ export class TransactionsRepository {
     });
   }
 
+  async findAllWithPagination(
+    userId: string,
+    skip: number,
+    take: number,
+    filters: { month?: number; year?: number }
+  ) {
+    const whereClause: Prisma.TransactionWhereInput = {
+      userId,
+      isDeleted: false,
+    };
+
+    if (filters.month && filters.year) {
+      const startDate = new Date(filters.year, filters.month - 1, 1);
+      const endDate = new Date(filters.year, filters.month, 0, 23, 59, 59, 999);
+
+      whereClause.transactionDate = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where: whereClause,
+        orderBy: [{ transactionDate: 'desc' }, { createdAt: 'desc' }],
+        skip,
+        take,
+        include: {
+          category: {
+            select: { id: true, name: true, icon: true, type: true },
+          },
+          wallet: {
+            select: { id: true, name: true, icon: true },
+          },
+        },
+      }),
+      prisma.transaction.count({ where: whereClause }),
+    ]);
+
+    return { transactions, total };
+  }
+
   async findByUserId(userId: string, options: FindOptions): Promise<Transaction[]> {
     return prisma.transaction.findMany({
       where: {

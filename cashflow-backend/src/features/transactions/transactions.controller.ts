@@ -1,4 +1,4 @@
-import { ApiResponse, AuthRequest, PaginationQuery } from '@/types/index';
+import { ApiResponse, AuthRequest } from '@/types/index';
 import { AppError } from '@core/errors/AppError';
 import { NextFunction, Response } from 'express';
 import { TransactionsUseCase } from './transactions.usecase';
@@ -9,6 +9,17 @@ import { TransactionsUseCase } from './transactions.usecase';
  */
 export class TransactionsController {
   private useCase = new TransactionsUseCase();
+
+  private parseIntegerQuery(value: unknown, fieldName: string): number | undefined {
+    if (value === undefined) return undefined;
+
+    const parsed = Number.parseInt(value as string, 10);
+    if (Number.isNaN(parsed)) {
+      throw new AppError(`${fieldName} must be a valid integer`, 400);
+    }
+
+    return parsed;
+  }
 
   async getRecent(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -30,14 +41,34 @@ export class TransactionsController {
     try {
       if (!req.user) throw new AppError('Unauthorized', 401);
 
-      const query: PaginationQuery = {
-        page: req.query.page ? parseInt(req.query.page as string) : 1,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
-      };
+      const page = this.parseIntegerQuery(req.query.page, 'page') ?? 1;
+      const limit = this.parseIntegerQuery(req.query.limit, 'limit') ?? 20;
+      const month = this.parseIntegerQuery(req.query.month, 'month');
+      const year = this.parseIntegerQuery(req.query.year, 'year');
 
-      const result = await this.useCase.getAllTransactions(req.user.id, query);
+      if (page < 1) throw new AppError('page must be greater than or equal to 1', 400);
+      if (limit < 1 || limit > 100) throw new AppError('limit must be between 1 and 100', 400);
+
+      if ((month === undefined && year !== undefined) || (month !== undefined && year === undefined)) {
+        throw new AppError('month and year must be provided together', 400);
+      }
+
+      if (month !== undefined && (month < 1 || month > 12)) {
+        throw new AppError('month must be between 1 and 12', 400);
+      }
+
+      if (year !== undefined) {
+        const currentYear = new Date().getFullYear();
+        if (year < 1900 || year > currentYear + 1) {
+          throw new AppError(`year must be between 1900 and ${currentYear + 1}`, 400);
+        }
+      }
+
+      const result = await this.useCase.getTransactionsList(req.user.id, page, limit, month, year);
+
       res.status(200).json({
         status: 'success',
+        message: 'Transactions fetched successfully',
         data: result,
       } as ApiResponse);
     } catch (error) {
