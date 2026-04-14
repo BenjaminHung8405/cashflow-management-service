@@ -301,6 +301,219 @@ Rule quan trọng:
 - User chỉ được Read/Update/Delete wallet của chính mình.
 - Truy cập wallet của user khác trả về `404 Wallet not found`.
 
-## 5. Hỗ Trợ Thêm
+## 5. Transactions Module APIs
+
+Module quản lý các giao dịch thu chi.
+
+- Prefix: `/transactions`
+- Auth: Bắt buộc
+
+### 5.1 Lấy các giao dịch gần đây (Get Recent)
+
+Dùng cho trang chủ Flutter (Dashboard).
+
+- Method: `GET`
+- URL: `/transactions/recent`
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "transactions": [
+      {
+        "id": "uuid",
+        "amount": "50000",
+        "type": "EXPENSE",
+        "note": "Ăn sáng",
+        "transactionDate": "2026-03-27T08:00:00.000Z",
+        "wallet": { "name": "Cash" },
+        "category": { "name": "Food", "icon": "food" }
+      }
+    ]
+  }
+}
+```
+
+### 5.2 Danh sách giao dịch (List Transactions)
+
+Hỗ trợ phân trang và lọc theo thời gian.
+
+- Method: `GET`
+- URL: `/transactions`
+- Query Params:
+  - `page`: Trang hiện tại (mặc định 1)
+  - `limit`: Số lượng item mỗi trang (mặc định 20)
+  - `month`: Lọc theo tháng (1-12)
+  - `year`: Lọc theo năm
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "transactions": [...],
+    "pagination": {
+      "total": 100,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 5
+    }
+  }
+}
+```
+
+### 5.3 Tạo giao dịch (Create Transaction)
+
+- Method: `POST`
+- URL: `/transactions`
+
+#### Request Body
+
+```json
+{
+  "walletId": "uuid-cua-vi",
+  "categoryId": "uuid-cua-hang-muc",
+  "amount": 50000,
+  "type": "EXPENSE",
+  "note": "Mua cafe",
+  "transactionDate": "2026-03-27T08:30:00.000Z"
+}
+```
+
+### 5.4 Cập nhật/Xóa giao dịch
+
+- `PATCH /transactions/:id`: Cập nhật thông tin giao dịch (body giống POST).
+- `DELETE /transactions/:id`: Xóa giao dịch.
+
+---
+
+## 6. Categories Module APIs
+
+- Prefix: `/categories`
+
+### 6.1 Lấy danh sách hạng mục
+
+- Method: `GET`
+- URL: `/categories`
+
+Trả về danh sách các hạng mục (bao gồm hạng mục hệ thống và hạng mục do user tự tạo).
+
+### 6.2 Tạo hạng mục mới
+
+- Method: `POST`
+- URL: `/categories`
+
+#### Request Body
+
+```json
+{
+  "name": "Shopping",
+  "type": "EXPENSE",
+  "icon": "shopping_cart"
+}
+```
+
+---
+
+## 7. Budgets Module APIs (Ngân sách)
+
+- Prefix: `/budgets`
+
+### 7.1 Lấy tiến độ ngân sách (Budget Progress)
+
+Dùng để hiển thị thanh progress bar trên UI.
+
+- Method: `GET`
+- URL: `/budgets/progress`
+- Query Params: `month`, `year`
+
+#### Success Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "budgets": [
+      {
+        "id": "uuid",
+        "categoryId": "uuid",
+        "categoryName": "Food",
+        "amountLimit": "5000000",
+        "amountSpent": "1200000",
+        "percentage": 24.0
+      }
+    ]
+  }
+}
+```
+
+### 7.2 Thiết lập ngân sách (Set Budget)
+
+Dùng để tạo mới hoặc cập nhật giới hạn chi tiêu.
+
+- Method: `POST`
+- URL: `/budgets`
+
+#### Request Body
+
+```json
+{
+  "categoryId": "uuid",
+  "amountLimit": 2000000,
+  "month": 4,
+  "year": 2026
+}
+```
+
+---
+
+## 8. Dashboard & Analytics APIs
+
+- Prefix: `/dashboard`
+
+### 8.1 Thống kê tổng quan (Statistics)
+
+- Method: `GET`
+- URL: `/dashboard/statistics`
+- Query Params: `month`, `year`
+
+#### Success Response
+
+```json
+{
+  "status": "success",
+  "data": {
+    "totalIncome": "15000000",
+    "totalExpense": "8000000",
+    "balance": "7000000"
+  }
+}
+```
+
+### 8.2 Dữ liệu biểu đồ (Chart Data)
+
+- Method: `GET`
+- URL: `/dashboard/chart`
+- Query Params:
+  - `type`: `expense_by_category` hoặc `income_vs_expense`
+  - `month`, `year`
+
+---
+
+## 9. Assistant (AI) APIs
+
+### 9.1 AI Roast
+
+AI phân tích tình hình chi tiêu và đưa ra nhận xét (Roast).
+
+- Method: `GET`
+- URL: `/assistant/roast`
+
+---
+
+## 10. Hỗ Trợ Thêm
 
 Nếu team cần, Backend có thể xuất bộ API này thành **Postman Collection (JSON)** để import và test nhanh.
