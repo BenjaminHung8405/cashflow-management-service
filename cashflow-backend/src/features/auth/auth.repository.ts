@@ -3,8 +3,7 @@ import type { Prisma, User } from '@prisma/client';
 import { prisma } from '../../core/config/database';
 
 type CreateUserInput = {
-  username: string;
-  email?: string;
+  email: string;
   passwordHash: string;
 };
 
@@ -98,7 +97,6 @@ export const updateProfile = async (
 export const createUser = async (data: CreateUserInput): Promise<PublicUser> => {
   return prisma.user.create({
     data: {
-      username: data.username,
       email: data.email,
       passwordHash: data.passwordHash,
     },

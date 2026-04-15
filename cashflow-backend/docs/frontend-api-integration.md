@@ -42,9 +42,8 @@ Dùng cho màn hình Đăng ký. Không yêu cầu token.
 
 ```json
 {
-  "username": "hauduy",
-  "password": "password123",
-  "email": "dev@example.com"
+  "email": "hauduy@example.com",
+  "password": "password123"
 }
 ```
 
@@ -57,8 +56,7 @@ Dùng cho màn hình Đăng ký. Không yêu cầu token.
   "data": {
     "user": {
       "id": "uuid-string-...",
-      "username": "hauduy",
-      "email": "dev@example.com",
+      "email": "hauduy@example.com",
       "createdAt": "2026-03-27T10:00:00.000Z"
     }
   }
@@ -77,7 +75,7 @@ Dùng cho màn hình Đăng nhập (Task UI-104). API trả về `token` để l
 
 ```json
 {
-  "username": "hauduy",
+  "email": "hauduy@example.com",
   "password": "password123"
 }
 ```
@@ -91,8 +89,7 @@ Dùng cho màn hình Đăng nhập (Task UI-104). API trả về `token` để l
   "data": {
     "user": {
       "id": "uuid-string-...",
-      "username": "hauduy",
-      "email": "dev@example.com"
+      "email": "hauduy@example.com"
     },
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6Ik..."
   }
@@ -100,7 +97,7 @@ Dùng cho màn hình Đăng nhập (Task UI-104). API trả về `token` để l
 ```
 
 Lưu ý cho Frontend:
-- Nếu sai tài khoản hoặc mật khẩu, API trả về HTTP `401` với message: `Invalid username or password`.
+- Nếu sai email hoặc mật khẩu, API trả về HTTP `401` với message: `Invalid email or password`.
 - Token cần được lưu lại để dùng cho các API yêu cầu xác thực.
 
 ### 2.3 Lấy thông tin User hiện tại (Get Profile)
@@ -120,8 +117,7 @@ Dùng để lấy thông tin hiển thị lên App Shell hoặc màn hình Profi
   "data": {
     "user": {
       "id": "uuid-string-...",
-      "username": "hauduy",
-      "email": "dev@example.com",
+      "email": "hauduy@example.com",
       "createdAt": "2026-03-27T10:00:00.000Z"
     }
   }
@@ -140,6 +136,9 @@ Lưu ý cho Frontend:
 - Tự động thêm header `Authorization: Bearer <token>` cho các API cần auth.
 - Bỏ qua interceptor cho `POST /auth/login` và `POST /auth/register`.
 - Nếu response `401`, xử lý global logout + điều hướng về màn hình login.
+
+## Note
+- Từ phiên bản này, auth sử dụng **email** thay vì username để đăng nhập.
 
 ## 4. Wallets Module APIs
 

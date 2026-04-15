@@ -12,14 +12,14 @@ import type { AuthRequest } from '../../types/index';
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Controller chỉ làm nhiệm vụ trích xuất dữ liệu từ body
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      throw new AppError('Username and password are required', 400);
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
     }
 
     // Đẩy data xuống UseCase xử lý
-    const user = await registerUser({ username, email, password });
+    const user = await registerUser({ email, password });
 
     // Trả về kết quả
     res.status(201).json({
@@ -35,13 +35,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      throw new AppError('Username and password are required', 400);
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
     }
 
-    const result = await loginUser({ username, password });
+    const result = await loginUser({ email, password });
 
     res.status(200).json({
       status: 'success',
