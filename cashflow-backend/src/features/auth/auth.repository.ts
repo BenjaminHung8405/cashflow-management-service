@@ -1,8 +1,9 @@
-import type { Prisma, User } from '@prisma/client';
+import type { Prisma, User } from "@prisma/client";
 
-import { prisma } from '../../core/config/database';
+import { prisma } from "../../core/config/database";
 
 type CreateUserInput = {
+  username: string;
   email: string;
   passwordHash: string;
 };
@@ -36,15 +37,22 @@ type UpdatedProfileUser = Prisma.UserGetPayload<{
   };
 }>;
 
-export const findUserByUsername = async (username: string): Promise<User | null> => {
+export const findUserByUsername = async (
+  username: string,
+): Promise<User | null> => {
   return prisma.user.findUnique({
     where: { username },
   });
 };
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
-  return prisma.user.findUnique({
-    where: { email },
+  return prisma.user.findFirst({
+    where: {
+      email: {
+        equals: email,
+        mode: "insensitive",
+      },
+    },
   });
 };
 
@@ -60,7 +68,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
 
 export const updatePassword = async (
   id: string,
-  passwordHash: string
+  passwordHash: string,
 ): Promise<UpdatedUserAfterPasswordChange> => {
   return prisma.user.update({
     where: { id },
@@ -75,13 +83,15 @@ export const updatePassword = async (
 
 export const updateProfile = async (
   id: string,
-  data: { email?: string; telegramChatId?: string | null }
+  data: { email?: string; telegramChatId?: string | null },
 ): Promise<UpdatedProfileUser> => {
   return prisma.user.update({
     where: { id },
     data: {
       ...(data.email !== undefined && { email: data.email }),
-      ...(data.telegramChatId !== undefined && { telegramChatId: data.telegramChatId }),
+      ...(data.telegramChatId !== undefined && {
+        telegramChatId: data.telegramChatId,
+      }),
     },
     select: {
       id: true,
@@ -94,9 +104,12 @@ export const updateProfile = async (
   });
 };
 
-export const createUser = async (data: CreateUserInput): Promise<PublicUser> => {
+export const createUser = async (
+  data: CreateUserInput,
+): Promise<PublicUser> => {
   return prisma.user.create({
     data: {
+      username: data.username,
       email: data.email,
       passwordHash: data.passwordHash,
     },
@@ -129,13 +142,15 @@ export class AuthRepository {
 
   async updatePassword(
     id: string,
-    passwordHash: string
+    passwordHash: string,
   ): Promise<UpdatedUserAfterPasswordChange> {
     return updatePassword(id, passwordHash);
   }
 
-  async updateProfile(id: string, data: { email?: string; telegramChatId?: string | null }): Promise<UpdatedProfileUser> {
+  async updateProfile(
+    id: string,
+    data: { email?: string; telegramChatId?: string | null },
+  ): Promise<UpdatedProfileUser> {
     return updateProfile(id, data);
   }
 }
-

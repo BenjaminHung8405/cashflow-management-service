@@ -15,7 +15,7 @@ Tài liệu này là đặc tả API chi tiết để team tích hợp vào ứn
 {
   "status": "success",
   "message": "Thông điệp thành công",
-  "data": { }
+  "data": {}
 }
 ```
 
@@ -97,6 +97,7 @@ Dùng cho màn hình Đăng nhập (Task UI-104). API trả về `token` để l
 ```
 
 Lưu ý cho Frontend:
+
 - Nếu sai email hoặc mật khẩu, API trả về HTTP `401` với message: `Invalid email or password`.
 - Token cần được lưu lại để dùng cho các API yêu cầu xác thực.
 
@@ -125,6 +126,7 @@ Dùng để lấy thông tin hiển thị lên App Shell hoặc màn hình Profi
 ```
 
 Lưu ý cho Frontend:
+
 - Nếu token hết hạn hoặc không hợp lệ, API trả về HTTP `401` (ví dụ: `Unauthorized: Token has expired`).
 - Khi nhận lỗi `401`, Frontend nên trigger luồng logout và điều hướng về màn hình Đăng nhập.
 
@@ -138,6 +140,7 @@ Lưu ý cho Frontend:
 - Nếu response `401`, xử lý global logout + điều hướng về màn hình login.
 
 ## Note
+
 - Từ phiên bản này, auth sử dụng **email** thay vì username để đăng nhập.
 
 ## 4. Wallets Module APIs
@@ -199,6 +202,7 @@ Content-Type: application/json
 ```
 
 Lưu ý:
+
 - `name` là bắt buộc.
 - `walletType` mặc định là `CASH` nếu không truyền.
 - `balance` luôn mặc định `0` khi tạo.
@@ -257,6 +261,7 @@ Lưu ý:
 ```
 
 Rule quan trọng:
+
 - Không được update `balance` qua API này.
 - Nếu gửi `balance`, API trả về HTTP `400` với message:
   - `Wallet balance cannot be updated directly`
@@ -282,6 +287,7 @@ Rule quan trọng:
 - URL: `/wallets/:id`
 
 Rule quan trọng:
+
 - Chỉ được xóa wallet của user đang login.
 - Nếu wallet đã có transactions, API trả về HTTP `400` với message:
   - `Cannot delete wallet with existing transactions`

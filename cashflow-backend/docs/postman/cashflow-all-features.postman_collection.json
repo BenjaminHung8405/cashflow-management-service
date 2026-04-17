@@ -29,12 +29,8 @@
             "header": [],
             "url": {
               "raw": "{{baseHost}}/health",
-              "host": [
-                "{{baseHost}}"
-              ],
-              "path": [
-                "health"
-              ]
+              "host": ["{{baseHost}}"],
+              "path": ["health"]
             }
           },
           "response": []
@@ -48,17 +44,44 @@
           "name": "Register",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const uniqueSuffix = Date.now();",
+                  "pm.collectionVariables.set('username', `cashflow_demo_user_${uniqueSuffix}`);",
+                  "pm.collectionVariables.set('email', `cashflow_demo_user_${uniqueSuffix}@example.com`);",
+                  "pm.collectionVariables.set('emailUpdated', `cashflow_demo_user_${uniqueSuffix}_updated@example.com`);",
+                  "pm.collectionVariables.set('password', 'password123');",
+                  "pm.collectionVariables.set('newPassword', 'password1234');"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 201 or 400/409 (already exists)', function () {",
+                  "pm.test('Status code is 201 or 400/409', function () {",
                   "  pm.expect(pm.response.code).to.be.oneOf([201, 400, 409]);",
                   "});",
                   "",
                   "pm.test('Response has status field', function () {",
                   "  const responseBodyJson = pm.response.json();",
                   "  pm.expect(responseBodyJson).to.have.property('status');",
+                  "});",
+                  "",
+                  "pm.test('When register success, response includes username and email', function () {",
+                  "  if (pm.response.code !== 201) {",
+                  "    return;",
+                  "  }",
+                  "",
+                  "  const responseBodyJson = pm.response.json();",
+                  "  pm.expect(responseBodyJson).to.have.property('status', 'success');",
+                  "  pm.expect(responseBodyJson).to.have.property('data');",
+                  "  pm.expect(responseBodyJson.data).to.have.property('user');",
+                  "  pm.expect(responseBodyJson.data.user).to.have.property('username', pm.collectionVariables.get('username'));",
+                  "  pm.expect(responseBodyJson.data.user).to.have.property('email', pm.collectionVariables.get('email'));",
                   "});"
                 ]
               }
@@ -75,7 +98,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -84,13 +107,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
             }
           },
           "response": []
@@ -143,13 +161,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
             }
           },
           "response": []
@@ -187,13 +200,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "profile"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
             }
           },
           "response": []
@@ -234,13 +242,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "profile"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
             },
             "body": {
               "mode": "raw",
@@ -258,6 +261,17 @@
           "name": "Change Password",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const currentPassword = pm.collectionVariables.get('password') || 'password123';",
+                  "const nextPassword = `${currentPassword}_next`;",
+                  "pm.collectionVariables.set('newPassword', nextPassword);"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -269,6 +283,14 @@
                   "pm.test('Response has status field', function () {",
                   "  const responseBodyJson = pm.response.json();",
                   "  pm.expect(responseBodyJson).to.have.property('status');",
+                  "});",
+                  "",
+                  "pm.test('When password changed, update collection password', function () {",
+                  "  if (pm.response.code !== 200) {",
+                  "    return;",
+                  "  }",
+                  "",
+                  "  pm.collectionVariables.set('password', pm.collectionVariables.get('newPassword'));",
                   "});"
                 ]
               }
@@ -290,13 +312,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/change-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "change-password"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
             },
             "body": {
               "mode": "raw",
@@ -372,12 +389,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/categories",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
             }
           },
           "response": []
@@ -417,12 +430,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/categories",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
             }
           },
           "response": []
@@ -458,13 +467,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/categories/{{categoryId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories",
-                "{{categoryId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
             }
           },
           "response": []
@@ -509,13 +513,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/categories/{{categoryId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories",
-                "{{categoryId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
             }
           },
           "response": []
@@ -546,13 +545,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/categories/{{categoryId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories",
-                "{{categoryId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
             }
           },
           "response": []
@@ -619,12 +613,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/wallets",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wallets"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets"]
             },
             "description": "Note: this request works only when wallets routes are mounted in app.ts."
           },
@@ -664,12 +654,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/wallets",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wallets"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets"]
             }
           },
           "response": []
@@ -700,13 +686,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/wallets/{{walletId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wallets",
-                "{{walletId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}"]
             }
           },
           "response": []
@@ -751,13 +732,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/wallets/{{walletId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wallets",
-                "{{walletId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}"]
             }
           },
           "response": []
@@ -788,13 +764,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/wallets/{{walletId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wallets",
-                "{{walletId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}"]
             }
           },
           "response": []
@@ -868,12 +839,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/transactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions"]
             },
             "description": "Note: this request works only when transactions routes are mounted in app.ts."
           },
@@ -905,12 +872,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transactions?page=1&limit=10",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transactions"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions"],
               "query": [
                 {
                   "key": "page",
@@ -951,13 +914,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transactions/recent",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transactions",
-                "recent"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "recent"]
             }
           },
           "response": []
@@ -988,13 +946,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transactions/{{transactionId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transactions",
-                "{{transactionId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "{{transactionId}}"]
             }
           },
           "response": []
@@ -1030,13 +983,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transactions/{{transactionId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transactions",
-                "{{transactionId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "{{transactionId}}"]
             },
             "body": {
               "mode": "raw",
@@ -1076,13 +1024,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transactions/{{transactionId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transactions",
-                "{{transactionId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "{{transactionId}}"]
             }
           },
           "response": []
@@ -1127,13 +1070,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/dashboard/statistics",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "dashboard",
-                "statistics"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "statistics"]
             }
           },
           "response": []
@@ -1170,13 +1108,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/dashboard/statistics?month={{month}}&year={{year}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "dashboard",
-                "statistics"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "statistics"],
               "query": [
                 {
                   "key": "month",
@@ -1224,13 +1157,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/dashboard/statistics?month=13&year={{year}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "dashboard",
-                "statistics"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "statistics"],
               "query": [
                 {
                   "key": "month",
@@ -1277,13 +1205,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/dashboard/chart?type=EXPENSE&month={{month}}&year={{year}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "dashboard",
-                "chart"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "chart"],
               "query": [
                 {
                   "key": "type",
@@ -1359,12 +1282,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/budgets",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "budgets"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets"]
             },
             "body": {
               "mode": "raw",
@@ -1413,13 +1332,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/budgets/progress?month={{month}}&year={{year}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "budgets",
-                "progress"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets", "progress"],
               "query": [
                 {
                   "key": "month",
@@ -1460,13 +1374,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/budgets/{{budgetId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "budgets",
-                "{{budgetId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets", "{{budgetId}}"]
             }
           },
           "response": []
@@ -1507,13 +1416,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/assistant/roast",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "assistant",
-                "roast"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["assistant", "roast"]
             }
           },
           "response": []
@@ -1549,13 +1453,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/assistant/test-telegram",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "assistant",
-                "test-telegram"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["assistant", "test-telegram"]
             }
           },
           "response": []

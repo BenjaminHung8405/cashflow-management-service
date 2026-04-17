@@ -1,30 +1,34 @@
-import { AppError } from '@core/errors/AppError';
+import { AppError } from "@core/errors/AppError";
 import {
-    changePassword as changePasswordUseCase,
-    getUserById,
-    loginUser,
-    registerUser,
-    updateProfile as updateProfileUseCase,
-} from '@features/auth/auth.usecase';
-import { NextFunction, Request, Response } from 'express';
-import type { AuthRequest } from '../../types/index';
+  changePassword as changePasswordUseCase,
+  getUserById,
+  loginUser,
+  registerUser,
+  updateProfile as updateProfileUseCase,
+} from "@features/auth/auth.usecase";
+import { NextFunction, Request, Response } from "express";
+import type { AuthRequest } from "../../types/index";
 
-export const register = async (req: Request, res: Response, next: NextFunction) => {
+export const register = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     // Controller chỉ làm nhiệm vụ trích xuất dữ liệu từ body
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
 
     if (!email || !password) {
-      throw new AppError('Email and password are required', 400);
+      throw new AppError("Email and password are required", 400);
     }
 
     // Đẩy data xuống UseCase xử lý
-    const user = await registerUser({ email, password });
+    const user = await registerUser({ username, email, password });
 
     // Trả về kết quả
     res.status(201).json({
-      status: 'success',
-      message: 'User registered successfully',
+      status: "success",
+      message: "User registered successfully",
       data: { user },
     });
   } catch (error) {
@@ -33,19 +37,23 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new AppError('Email and password are required', 400);
+      throw new AppError("Email and password are required", 400);
     }
 
     const result = await loginUser({ email, password });
 
     res.status(200).json({
-      status: 'success',
-      message: 'Login successful',
+      status: "success",
+      message: "Login successful",
       data: result,
     });
   } catch (error) {
@@ -54,10 +62,14 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-export const getProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getProfile = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     if (!req.user) {
-      throw new AppError('Unauthorized', 401);
+      throw new AppError("Unauthorized", 401);
     }
 
     // Nhờ middleware 'requireAuth', ta chắc chắn req.user đã tồn tại ở bước này
@@ -66,7 +78,7 @@ export const getProfile = async (req: AuthRequest, res: Response, next: NextFunc
     const user = await getUserById(userId);
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: { user },
     });
   } catch (error) {
@@ -74,10 +86,14 @@ export const getProfile = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
-export const changePassword = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     if (!req.user) {
-      throw new AppError('Unauthorized', 401);
+      throw new AppError("Unauthorized", 401);
     }
 
     const userId = req.user.id;
@@ -86,28 +102,35 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
     await changePasswordUseCase(userId, { oldPassword, newPassword });
 
     res.status(200).json({
-      status: 'success',
-      message: 'Password updated successfully',
+      status: "success",
+      message: "Password updated successfully",
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateProfile = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     if (!req.user) {
-      throw new AppError('Unauthorized', 401);
+      throw new AppError("Unauthorized", 401);
     }
 
     const userId = req.user.id;
     const { email, telegramChatId } = req.body;
 
-    const updatedUser = await updateProfileUseCase(userId, { email, telegramChatId });
+    const updatedUser = await updateProfileUseCase(userId, {
+      email,
+      telegramChatId,
+    });
 
     res.status(200).json({
-      status: 'success',
-      message: 'Profile updated successfully',
+      status: "success",
+      message: "Profile updated successfully",
       data: { user: updatedUser },
     });
   } catch (error) {
