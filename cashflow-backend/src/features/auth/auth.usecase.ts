@@ -25,6 +25,11 @@ type UpdateProfileInput = {
   telegramChatId?: string | null;
 };
 
+type AuthTokenPayload = {
+  id: string;
+  username: string;
+};
+
 const normalizeEmail = (email: string): string => {
   return email.normalize("NFKC").trim().toLowerCase();
 };
@@ -53,6 +58,15 @@ const isUniqueConstraintError = (
     : String(target ?? "").toLowerCase();
 
   return keywords.some((keyword) => targetText.includes(keyword.toLowerCase()));
+};
+
+const createAuthToken = (payload: AuthTokenPayload): string => {
+  const secret = process.env.JWT_SECRET || "fallback_secret";
+  const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
+
+  return jwt.sign(payload, secret, {
+    expiresIn: expiresIn as jwt.SignOptions["expiresIn"],
+  });
 };
 
 export const registerUser = async (data: RegisterInput) => {
@@ -110,7 +124,15 @@ export const registerUser = async (data: RegisterInput) => {
       passwordHash,
     });
 
-    return newUser;
+    const token = createAuthToken({
+      id: newUser.id,
+      username: newUser.username,
+    });
+
+    return {
+      user: newUser,
+      token,
+    };
   } catch (error) {
     if (isUniqueConstraintError(error, ["email", "users_email"])) {
       throw new AppError("Email already exists", 409);
@@ -143,12 +165,9 @@ export const loginUser = async (data: LoginInput) => {
   }
 
   // 3. Tạo JWT Token
-  const secret = process.env.JWT_SECRET || "fallback_secret";
-  const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
-
-  // Payload của token chứa id để sau này các API khác biết ai đang gọi
-  const token = jwt.sign({ id: user.id, email: user.email }, secret, {
-    expiresIn: expiresIn as jwt.SignOptions["expiresIn"],
+  const token = createAuthToken({
+    id: user.id,
+    username: user.username,
   });
 
   // 4. Loại bỏ passwordHash trước khi trả data về cho Frontend

@@ -23,13 +23,13 @@ export const register = async (
     }
 
     // Đẩy data xuống UseCase xử lý
-    const user = await registerUser({ username, email, password });
+    const result = await registerUser({ username, email, password });
 
     // Trả về kết quả
     res.status(201).json({
       status: "success",
       message: "User registered successfully",
-      data: { user },
+      data: result,
     });
   } catch (error) {
     // Nếu UseCase quăng lỗi (ví dụ: Trùng username), đẩy sang Error Middleware xử lý

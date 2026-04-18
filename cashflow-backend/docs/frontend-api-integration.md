@@ -58,10 +58,16 @@ Dùng cho màn hình Đăng ký. Không yêu cầu token.
       "id": "uuid-string-...",
       "email": "hauduy@example.com",
       "createdAt": "2026-03-27T10:00:00.000Z"
-    }
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6Ik..."
   }
 }
 ```
+
+Lưu ý cho Frontend:
+
+- Sau khi đăng ký thành công, backend trả về luôn `token` để có thể gọi ngay các API cần auth.
+- Token có thời hạn mặc định `7d`.
 
 ### 2.2 Đăng nhập (Login)
 
@@ -100,6 +106,7 @@ Lưu ý cho Frontend:
 
 - Nếu sai email hoặc mật khẩu, API trả về HTTP `401` với message: `Invalid email or password`.
 - Token cần được lưu lại để dùng cho các API yêu cầu xác thực.
+- Token có thời hạn mặc định `7d`.
 
 ### 2.3 Lấy thông tin User hiện tại (Get Profile)
 

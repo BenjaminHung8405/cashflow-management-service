@@ -4,27 +4,36 @@ type TelegramSendResult = {
   description?: string;
 };
 
+type TelegramApiResponse = {
+  ok?: boolean;
+  error_code?: number;
+  description?: string;
+};
+
 export class TelegramService {
   private static escapeHtml(input: string): string {
     return input
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
   }
 
-  static async sendMessage(chatId: string, text: string): Promise<TelegramSendResult> {
+  static async sendMessage(
+    chatId: string,
+    text: string,
+  ): Promise<TelegramSendResult> {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
       return {
         ok: false,
-        description: 'TELEGRAM_BOT_TOKEN is missing',
+        description: "TELEGRAM_BOT_TOKEN is missing",
       };
     }
 
     if (!chatId || chatId.trim().length === 0) {
       return {
         ok: false,
-        description: 'telegram chat id is missing',
+        description: "telegram chat id is missing",
       };
     }
 
@@ -32,21 +41,24 @@ export class TelegramService {
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
           text: this.escapeHtml(text),
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as TelegramApiResponse;
       if (!response.ok || !data.ok) {
         return {
           ok: false,
           errorCode: data.error_code,
-          description: data.description || response.statusText || 'Telegram API request failed',
+          description:
+            data.description ||
+            response.statusText ||
+            "Telegram API request failed",
         };
       }
 
@@ -54,7 +66,10 @@ export class TelegramService {
     } catch (error) {
       return {
         ok: false,
-        description: error instanceof Error ? error.message : 'Unknown error while calling Telegram API',
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unknown error while calling Telegram API",
       };
     }
   }
