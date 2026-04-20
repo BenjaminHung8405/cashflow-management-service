@@ -6,6 +6,7 @@ type CreateUserInput = {
   username: string;
   email: string;
   passwordHash: string;
+  imageUrl?: string;
 };
 
 type PublicUser = Prisma.UserGetPayload<{
@@ -14,6 +15,7 @@ type PublicUser = Prisma.UserGetPayload<{
     username: true;
     email: true;
     telegramChatId: true;
+    imageUrl: true;
     createdAt: true;
   };
 }>;
@@ -32,6 +34,7 @@ type UpdatedProfileUser = Prisma.UserGetPayload<{
     username: true;
     email: true;
     telegramChatId: true;
+    imageUrl: true;
     createdAt: true;
     updatedAt: true;
   };
@@ -83,7 +86,11 @@ export const updatePassword = async (
 
 export const updateProfile = async (
   id: string,
-  data: { email?: string; telegramChatId?: string | null },
+  data: {
+    email?: string;
+    telegramChatId?: string | null;
+    imageUrl?: string;
+  },
 ): Promise<UpdatedProfileUser> => {
   return prisma.user.update({
     where: { id },
@@ -92,12 +99,16 @@ export const updateProfile = async (
       ...(data.telegramChatId !== undefined && {
         telegramChatId: data.telegramChatId,
       }),
+      ...(data.imageUrl !== undefined && {
+        imageUrl: data.imageUrl,
+      }),
     },
     select: {
       id: true,
       username: true,
       email: true,
       telegramChatId: true,
+      imageUrl: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -112,12 +123,14 @@ export const createUser = async (
       username: data.username,
       email: data.email,
       passwordHash: data.passwordHash,
+      ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl }),
     },
     select: {
       id: true,
       username: true,
       email: true,
       telegramChatId: true,
+      imageUrl: true,
       createdAt: true,
     },
   });

@@ -121,11 +121,12 @@ export const updateProfile = async (
     }
 
     const userId = req.user.id;
-    const { email, telegramChatId } = req.body;
+    const { email, telegramChatId, imageUrl } = req.body;
 
     const updatedUser = await updateProfileUseCase(userId, {
       email,
       telegramChatId,
+      imageUrl,
     });
 
     res.status(200).json({

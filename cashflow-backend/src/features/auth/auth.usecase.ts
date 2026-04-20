@@ -1,6 +1,6 @@
 import { AppError } from "@core/errors/AppError";
-import { Prisma } from "@prisma/client";
 import * as authRepo from "@features/auth/auth.repository";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -23,6 +23,7 @@ type LoginInput = {
 type UpdateProfileInput = {
   email?: string;
   telegramChatId?: string | null;
+  imageUrl?: string;
 };
 
 type AuthTokenPayload = {
@@ -230,9 +231,13 @@ export const updateProfile = async (
   userId: string,
   data: UpdateProfileInput,
 ) => {
-  const { email, telegramChatId } = data;
+  const { email, telegramChatId, imageUrl } = data;
 
-  if (email === undefined && telegramChatId === undefined) {
+  if (
+    email === undefined &&
+    telegramChatId === undefined &&
+    imageUrl === undefined
+  ) {
     throw new AppError("At least one field is required to update profile", 400);
   }
 
@@ -264,12 +269,18 @@ export const updateProfile = async (
     }
   }
 
+  let normalizedImageUrl: string | undefined;
+  if (imageUrl !== undefined) {
+    normalizedImageUrl = imageUrl.trim();
+  }
+
   try {
     return authRepo.updateProfile(userId, {
       ...(normalizedEmail !== undefined && { email: normalizedEmail }),
       ...(normalizedTelegramChatId !== undefined && {
         telegramChatId: normalizedTelegramChatId,
       }),
+      ...(normalizedImageUrl !== undefined && { imageUrl: normalizedImageUrl }),
     });
   } catch (error) {
     if (isUniqueConstraintError(error, ["email", "users_email"])) {

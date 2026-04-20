@@ -32,6 +32,7 @@ model User {
   email          String?  @unique @db.VarChar(100)
   passwordHash   String   @map("password_hash") @db.VarChar(255)
   telegramChatId String?  @map("telegram_chat_id") @db.VarChar(64)
+  imageUrl       String   @default("https://cdn-icons-png.freepik.com/512/3607/3607444.png") @map("image_url") @db.Text
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
