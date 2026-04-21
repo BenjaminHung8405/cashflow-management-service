@@ -1,4 +1,5 @@
 import { AppError } from '@core/errors/AppError';
+import { isValidUuid } from '@core/utils/uuid';
 import { Wallet, WalletType } from '@prisma/client';
 import { CreateWalletInput, UpdateWalletInput, WalletsRepository } from './wallets.repository';
 
@@ -31,6 +32,10 @@ export class WalletsUseCase {
 
   async getWalletById(userId: string, walletId: string): Promise<Wallet> {
     if (!userId) throw new AppError('Unauthorized', 401);
+
+    if (!isValidUuid(walletId)) {
+      throw new AppError('Invalid walletId format', 400);
+    }
 
     const wallet = await this.repository.findById(walletId);
 

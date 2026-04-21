@@ -1,6 +1,7 @@
 import { PaginatedResponse, PaginationQuery } from '@/types/index';
 import { prisma } from '@core/config/database';
 import { AppError } from '@core/errors/AppError';
+import { isValidUuid } from '@core/utils/uuid';
 import { Transaction, TransactionType } from '@prisma/client';
 import {
   CreateTransactionInput,
@@ -122,6 +123,13 @@ export class TransactionsUseCase {
     const walletIdStr = String(walletId);
     const categoryIdStr = String(categoryId);
 
+    if (!isValidUuid(walletIdStr)) {
+      throw new AppError('Invalid walletId format', 400);
+    }
+    if (!isValidUuid(categoryIdStr)) {
+      throw new AppError('Invalid categoryId format', 400);
+    }
+
     const wallet = await prisma.wallet.findUnique({
       where: { id: walletIdStr },
     });
@@ -192,6 +200,13 @@ export class TransactionsUseCase {
     const nextCategoryId = payloadData.categoryId
       ? String(payloadData.categoryId)
       : oldTransaction.categoryId;
+
+    if (!isValidUuid(nextWalletId)) {
+      throw new AppError('Invalid walletId format', 400);
+    }
+    if (!isValidUuid(nextCategoryId)) {
+      throw new AppError('Invalid categoryId format', 400);
+    }
 
     const wallet = await prisma.wallet.findUnique({
       where: { id: nextWalletId },
