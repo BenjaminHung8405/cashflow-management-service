@@ -26,6 +26,39 @@ export class AssistantController {
     }
   }
 
+  async getReports(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Unauthorized', 401);
+
+      const result = await this.useCase.getReports(req.user.id);
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Reports retrieved successfully',
+        data: result,
+      } as ApiResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async markAsRead(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Unauthorized', 401);
+      const { id } = req.params;
+
+      const result = await this.useCase.markReportAsRead(req.user.id, id);
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Report marked as read successfully',
+        data: result,
+      } as ApiResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async sendTestTelegram(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) throw new AppError('Unauthorized', 401);

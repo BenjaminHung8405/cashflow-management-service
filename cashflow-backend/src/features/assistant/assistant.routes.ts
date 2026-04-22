@@ -11,7 +11,10 @@ router.use(requireAuth);
 // Endpoint: GET /api/v1/assistant/roast
 router.get('/roast', asyncHandler((req, res, next) => controller.getRoast(req, res, next)));
 
-// Endpoint: POST /api/v1/assistant/test-telegram
-router.post('/test-telegram', asyncHandler((req, res, next) => controller.sendTestTelegram(req, res, next)));
+// Endpoint: GET /api/v1/assistant/reports
+router.get('/reports', asyncHandler((req, res, next) => controller.getReports(req, res, next)));
+
+// Endpoint: PATCH /api/v1/assistant/reports/:id/read
+router.patch('/reports/:id/read', asyncHandler((req, res, next) => controller.markAsRead(req, res, next)));
 
 export default router;
